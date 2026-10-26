@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — Security Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root { --bg-dark: #050505; --bg-glass: rgba(20, 20, 24, 0.6); --gold: #cba052; --text-main: #f8fafc; --text-muted: #8b949e; --border: rgba(255, 255, 255, 0.08); --green: #2ea043; --red: #f85149; --font-main: 'Inter', sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: var(--bg-dark); background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); color: var(--text-main); font-family: var(--font-main); -webkit-font-smoothing: antialiased; overflow-x: hidden; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    .top-navbar { position: sticky; top: 0; z-index: 900; display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s; z-index: 10001; }
+    .hamburger-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+    .logo span { color: var(--gold); }
+    .nav-right { display: flex; align-items: center; }
+    .profile-link-nav { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); transition: all 0.3s; cursor: pointer; }
+    .profile-link-nav:hover { border-color: var(--gold); background: rgba(203, 160, 82, 0.05); }
+    .nav-user-name { font-size: 14px; font-weight: 500; color: var(--text-main); display: none; }
+    @media(min-width: 600px) { .nav-user-name { display: block; } }
+    .avatar-nav { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100vh; background: #0d0d10; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 30px rgba(0,0,0,0.8); }
+    .sidebar.open { left: 0; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .close-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 8px; }
+    .close-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+    .sidebar-nav { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { display: block; padding: 12px 16px; border-radius: 8px; color: var(--text-muted); font-weight: 500; font-size: 14px; transition: all 0.2s; }
+    .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+    .nav-item.active { background: rgba(203, 160, 82, 0.1); color: var(--gold); font-weight: 600; border-left: 3px solid var(--gold); }
+    .sidebar-footer { padding: 24px; border-top: 1px solid var(--border); }
+    .btn-logout { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-logout:hover { background: rgba(248, 81, 73, 0.1); border-color: var(--red); color: var(--red); }
+    .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    body.no-scroll { overflow: hidden; }
+    .main-content { padding: 40px 24px; max-width: 900px; margin: 0 auto; }
+    .page-header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+    .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-muted); font-size: 15px; }
+    .security-section { margin-bottom: 40px; }
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+    .settings-card { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; transition: border-color 0.3s; }
+    .settings-card:hover { border-color: rgba(203, 160, 82, 0.3); }
+    .settings-info { flex: 1; padding-right: 24px; }
+    .settings-info h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .settings-info p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: rgba(255,255,255,0.1); transition: .4s; border-radius: 28px; border: 1px solid var(--border); }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--green); border-color: var(--green); }
+    input:checked + .slider:before { transform: translateX(22px); }
+    .btn-primary { background: var(--gold); color: #000; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; flex-shrink: 0; }
+    .password-form { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+    .input-group { display: flex; flex-direction: column; gap: 6px; }
+    .input-group label { font-size: 13px; font-weight: 500; color: var(--text-muted); }
+    .form-control { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; color: var(--text-main); font-family: var(--font-main); font-size: 14px; outline: none; transition: border-color 0.2s; }
+    .form-control:focus { border-color: var(--gold); }
+    .device-list { display: flex; flex-direction: column; gap: 12px; }
+    .device-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .device-info h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;}
+    .device-info p { font-size: 12px; color: var(--text-muted); }
+    .current-badge { background: rgba(46, 160, 67, 0.15); color: var(--green); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+    .btn-revoke { background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-revoke:hover { background: rgba(248, 81, 73, 0.1); color: var(--red); border-color: var(--red); }
+    @media (max-width: 600px) { .settings-card { flex-direction: column; align-items: flex-start; gap: 16px; } .btn-primary { width: 100%; } .device-item { flex-direction: column; align-items: flex-start; gap: 12px; } .btn-revoke { width: 100%; text-align: center; } }
+  </style>
+</head>
+<body>
+
+  <header class="top-navbar">
+    <div class="nav-left">
+      <button class="hamburger-btn" id="hamburgerBtn" type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+    </div>
+    <div class="nav-right">
+      <a href="profile.html" class="profile-link-nav">
+        <span class="nav-user-name" id="navUserName">Loading...</span>
+        <div class="avatar-nav" id="navAvatar">U</div>
+      </a>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebarMenu">
+    <div class="sidebar-header">
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+      <button class="close-btn" id="closeBtn" type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="transfers.html" class="nav-item">Transfers</a>
+      <a href="statements.html" class="nav-item">Statements</a>
+      <a href="profile.html" class="nav-item">My Profile</a>
+      <a href="security.html" class="nav-item active">Security Center</a>
+      <a href="support.html" class="nav-item">Support</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout" type="button">Log Out</button>
+    </div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h1 class="page-title">Security Center</h1>
+      <p class="page-subtitle">Manage your account security, passwords, and logged-in devices.</p>
+    </header>
+
+    <section class="security-section">
+      <h2 class="section-title">Authentication</h2>
+      <div class="settings-card">
+        <div class="settings-info">
+          <h3>Two-Factor Authentication (2FA)</h3>
+          <p>Protect your account with an extra layer of security. You'll need to enter a code sent to your phone when logging in from a new device.</p>
+        </div>
+        <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+      </div>
+      <div class="settings-card">
+        <div class="settings-info">
+          <h3>Biometric Login</h3>
+          <p>Use Face ID or Fingerprint to log in quickly and securely without typing your password.</p>
+        </div>
+        <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+      </div>
+    </section>
+
+    <section class="security-section">
+      <h2 class="section-title">Password</h2>
+      <div class="settings-card" style="flex-direction: column; align-items: stretch;">
+        <div class="settings-info">
+          <h3>Change Password</h3>
+          <p>Ensure your account stays secure by using a strong password that you don't use elsewhere.</p>
+        </div>
+        <form class="password-form" onsubmit="event.preventDefault(); alert('Password updated successfully!');">
+          <div class="input-group"><label>Current Password</label><input type="password" class="form-control" placeholder="Enter current password" required></div>
+          <div class="input-group"><label>New Password</label><input type="password" class="form-control" placeholder="Enter new password" required></div>
+          <div class="input-group"><label>Confirm New Password</label><input type="password" class="form-control" placeholder="Confirm new password" required></div>
+          <button type="submit" class="btn-primary" style="align-self: flex-start; margin-top: 8px;">Update Password</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="security-section">
+      <h2 class="section-title">Trusted Devices</h2>
+      <div class="device-list">
+        <div class="device-item">
+          <div class="device-info">
+            <h4>Chrome on Android <span class="current-badge">Current Device</span></h4>
+            <p>Lagos, Nigeria • Active now</p>
+          </div>
+        </div>
+        <div class="device-item">
+          <div class="device-info">
+            <h4>Safari on MacBook Pro</h4>
+            <p>Abuja, Nigeria • Last active 2 days ago</p>
+          </div>
+          <button class="btn-revoke">Log Out Device</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- REQUIRED: Load as module -->
+  <script type="module" src="shared.js"></script>
+</body>
+</html>

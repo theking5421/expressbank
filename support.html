@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — Support Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* [Keep all the CSS from your previous support.html exactly the same] */
+    :root { --bg-dark: #050505; --bg-glass: rgba(20, 20, 24, 0.6); --gold: #cba052; --text-main: #f8fafc; --text-muted: #8b949e; --border: rgba(255, 255, 255, 0.08); --green: #2ea043; --red: #f85149; --font-main: 'Inter', sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: var(--bg-dark); background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); color: var(--text-main); font-family: var(--font-main); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    .top-navbar { position: sticky; top: 0; z-index: 900; display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; padding: 8px; z-index: 10001; }
+    .logo { font-size: 18px; font-weight: 800; }
+    .logo span { color: var(--gold); }
+    .profile-link-nav { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); }
+    .avatar-nav { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100vh; background: #0d0d10; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10000; transition: left 0.3s ease; }
+    .sidebar.open { left: 0; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; }
+    .sidebar-nav { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { display: block; padding: 12px 16px; border-radius: 8px; color: var(--text-muted); font-weight: 500; font-size: 14px; }
+    .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+    .nav-item.active { background: rgba(203, 160, 82, 0.1); color: var(--gold); font-weight: 600; border-left: 3px solid var(--gold); }
+    .sidebar-footer { padding: 24px; border-top: 1px solid var(--border); }
+    .btn-logout { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-logout:hover { background: rgba(248, 81, 73, 0.1); color: var(--red); border-color: var(--red); }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    body.no-scroll { overflow: hidden; }
+    .main-content { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
+    .page-header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+    .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-muted); font-size: 15px; }
+    .support-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 32px; align-items: start; }
+    .contact-card { background: var(--bg-glass); border: 1px solid var(--border); border-radius: 16px; padding: 32px; }
+    .contact-card h2 { font-size: 20px; margin-bottom: 8px; }
+    .contact-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin-bottom: 8px; }
+    .form-control { width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; color: var(--text-main); font-family: var(--font-main); font-size: 14px; outline: none; }
+    .form-control:focus { border-color: var(--gold); }
+    textarea.form-control { resize: vertical; min-height: 120px; }
+    .btn-submit { background: var(--gold); color: #000; padding: 14px 24px; border-radius: 8px; font-weight: 600; font-size: 15px; border: none; cursor: pointer; width: 100%; }
+    .help-topics h2 { font-size: 18px; margin-bottom: 16px; }
+    .topic-list { display: flex; flex-direction: column; gap: 12px; }
+    .topic-item { background: var(--bg-glass); border: 1px solid var(--border); border-radius: 12px; padding: 16px; display: flex; align-items: center; gap: 16px; cursor: pointer; }
+    .topic-item:hover { border-color: var(--gold); }
+    .topic-icon { width: 40px; height: 40px; background: rgba(203, 160, 82, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--gold); }
+    .topic-info h4 { font-size: 14px; margin-bottom: 4px; }
+    .topic-info p { font-size: 12px; color: var(--text-muted); }
+    .live-chat-banner { background: linear-gradient(135deg, rgba(203, 160, 82, 0.15) 0%, rgba(203, 160, 82, 0.05) 100%); border: 1px solid rgba(203, 160, 82, 0.3); border-radius: 12px; padding: 20px; margin-top: 24px; display: flex; justify-content: space-between; align-items: center; }
+    .live-chat-banner h4 { font-size: 15px; color: var(--gold); }
+    .live-chat-banner p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .btn-chat { background: var(--gold); color: #000; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; border: none; cursor: pointer; }
+    @media (max-width: 900px) { .support-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+  <header class="top-navbar">
+    <div class="nav-left">
+      <button class="hamburger-btn" id="hamburgerBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+    </div>
+    <div class="nav-right">
+      <a href="profile.html" class="profile-link-nav">
+        <span class="nav-user-name" id="navUserName"></span>
+        <div class="avatar-nav" id="navAvatar">U</div>
+      </a>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebarMenu">
+    <div class="sidebar-header"><div class="logo">⚡ EXPRESS <span>BANK</span></div><button class="close-btn" id="closeBtn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="transfers.html" class="nav-item">Transfers</a>
+      <a href="statements.html" class="nav-item">Statements</a>
+      <a href="profile.html" class="nav-item">My Profile</a>
+      <a href="security.html" class="nav-item">Security Center</a>
+      <a href="support.html" class="nav-item active">Support</a>
+    </nav>
+    <div class="sidebar-footer"><button id="logoutBtn" class="btn-logout">Log Out</button></div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main-content">
+    <header class="page-header">
+      <h1 class="page-title">How can we help?</h1>
+      <p class="page-subtitle">Get in touch with our support team or browse help topics.</p>
+    </header>
+
+    <div class="support-grid">
+      <div class="contact-card">
+        <h2>Send us a message</h2>
+        <p>We typically respond within 24 hours.</p>
+        
+        <!-- Updated Form with ID -->
+        <form id="supportForm">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="supName" class="form-control" placeholder="John Doe" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="supEmail" class="form-control" placeholder="you@example.com" required>
+          </div>
+          <div class="form-group">
+            <label>Issue Category</label>
+            <select id="supCategory" class="form-control" required>
+              <option value="">-- Select a category --</option>
+              <option>Transfer Issue</option>
+              <option>Account Access</option>
+              <option>Card Problem</option>
+              <option>General Inquiry</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Message</label>
+            <textarea id="supMessage" class="form-control" placeholder="Describe your issue..." required></textarea>
+          </div>
+          <button type="submit" id="supSubmitBtn" class="btn-submit">Submit Request</button>
+        </form>
+      </div>
+
+      <div class="help-topics">
+        <h2>Help Topics</h2>
+        <div class="topic-list">
+          <div class="topic-item" onclick="alert('Loading FAQs...')">
+            <div class="topic-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+            <div class="topic-info"><h4>Frequently Asked Questions</h4><p>Find quick answers to common queries.</p></div>
+          </div>
+          <div class="topic-item" onclick="alert('Opening Transfer Guides...')">
+            <div class="topic-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></div>
+            <div class="topic-info"><h4>Transfer Guides</h4><p>Learn how to send money globally.</p></div>
+          </div>
+        </div>
+        <div class="live-chat-banner">
+          <div><h4>Need urgent help?</h4><p>Our agents are online 24/7.</p></div>
+          <button class="btn-chat" onclick="alert('Connecting to a live agent...')">Chat Now</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="shared.js"></script>
+  
+  <!-- FIREBASE SCRIPT FOR SUPPORT TICKETS -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD76E6QHruNuqLL_MInuzI9VyKFey1zvLw",
+      authDomain: "express-uts.firebaseapp.com",
+      projectId: "express-uts",
+      storageBucket: "express-uts.firebasestorage.app",
+      messagingSenderId: "812145406981",
+      appId: "1:812145406981:web:84797ac9d423b858dbd86c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    document.getElementById("supportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById("supSubmitBtn");
+      btn.textContent = "Sending...";
+      btn.disabled = true;
+
+      const name = document.getElementById("supName").value;
+      const email = document.getElementById("supEmail").value;
+      const category = document.getElementById("supCategory").value;
+      const message = document.getElementById("supMessage").value;
+
+      try {
+        await addDoc(collection(db, "support_tickets"), {
+          name: name,
+          email: email,
+          category: category,
+          message: message,
+          status: "Open",
+          date: new Date().toLocaleString()
+        });
+        
+        alert("Your support ticket has been submitted successfully! Our team will contact you shortly.");
+        document.getElementById("supportForm").reset();
+        btn.textContent = "Submit Request";
+        btn.disabled = false;
+      } catch (error) {
+        console.error("Error adding document: ", error);
+        alert("Failed to send message. Please check your internet connection.");
+        btn.textContent = "Submit Request";
+        btn.disabled = false;
+      }
+    });
+  </script>
+  <!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6adebda92411623473361a75/default';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+</body>
+</html>

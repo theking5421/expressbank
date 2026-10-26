@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — The Future of Banking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #050505;
+      --bg-glass: rgba(20, 20, 24, 0.6);
+      --gold: #cba052;
+      --gold-gradient: linear-gradient(135deg, #d4b26a 0%, #cba052 50%, #99742c 100%);
+      --text-main: #f8fafc;
+      --text-muted: #8b949e;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated Ambient Orbs */
+    .bg-orb {
+      position: absolute; border-radius: 50%; filter: blur(120px); z-index: 0; opacity: 0.4; pointer-events: none;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(203, 160, 82, 0.2) 0%, transparent 70%);
+      top: -10%; left: 20%; animation: float1 15s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(30, 58, 138, 0.2) 0%, transparent 70%);
+      bottom: 0%; right: 10%; animation: float2 20s ease-in-out infinite alternate;
+    }
+
+    @keyframes float1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(50px, 100px) scale(1.1); } }
+    @keyframes float2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-50px, -100px) scale(1.2); } }
+
+    /* Navbar */
+    .navbar {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 100;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 20px 40px;
+      background: rgba(5, 5, 5, 0.7); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-logo { font-size: 20px; font-weight: 800; letter-spacing: 1px; }
+    .brand-logo span { color: var(--gold); }
+
+    .nav-actions { display: flex; gap: 16px; align-items: center; }
+    .nav-actions a { text-decoration: none; color: var(--text-main); font-size: 14px; font-weight: 500; transition: 0.2s; }
+    .nav-actions a:hover { color: var(--gold); }
+    
+    .btn-nav {
+      background: var(--bg-glass); border: 1px solid var(--border);
+      padding: 10px 20px; border-radius: 50px; transition: 0.3s;
+    }
+    .btn-nav:hover { border-color: var(--gold); background: rgba(203, 160, 82, 0.05); }
+
+    /* Hero Section */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 120px 20px 60px;
+    }
+
+    .badge {
+      background: rgba(203, 160, 82, 0.1); border: 1px solid rgba(203, 160, 82, 0.3);
+      color: var(--gold); padding: 8px 16px; border-radius: 50px;
+      font-size: 13px; font-weight: 600; margin-bottom: 24px; letter-spacing: 1px;
+    }
+
+    .hero h1 { font-size: clamp(40px, 6vw, 72px); font-weight: 800; line-height: 1.1; margin-bottom: 24px; letter-spacing: -1px; }
+    .gold-text { 
+      background: var(--gold-gradient); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent; 
+    }
+
+    .hero p { color: var(--text-muted); font-size: clamp(16px, 2vw, 20px); max-width: 600px; margin-bottom: 40px; }
+
+    .hero-buttons { display: flex; gap: 16px; }
+    .btn-primary {
+      background: var(--gold-gradient); color: #000; text-decoration: none;
+      padding: 16px 36px; border-radius: 50px; font-weight: 700; font-size: 16px;
+      transition: 0.3s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(203, 160, 82, 0.3); }
+
+    .btn-secondary {
+      background: var(--bg-glass); border: 1px solid var(--border); color: var(--text-main);
+      text-decoration: none; padding: 16px 36px; border-radius: 50px; font-weight: 600; font-size: 16px;
+      transition: 0.3s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+
+    /* Features Section */
+    .features {
+      position: relative; z-index: 1;
+      padding: 80px 40px; max-width: 1000px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-glass); backdrop-filter: blur(16px);
+      border: 1px solid var(--border); border-radius: 20px; padding: 32px;
+      transition: 0.3s;
+    }
+    .feature-card:hover { border-color: rgba(203, 160, 82, 0.4); transform: translateY(-5px); }
+
+    .feature-icon {
+      width: 48px; height: 48px; background: rgba(203, 160, 82, 0.1); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; color: var(--gold);
+      font-size: 24px; margin-bottom: 20px;
+    }
+
+    .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    .feature-card p { color: var(--text-muted); font-size: 14px; line-height: 1.6; }
+
+    /* Footer */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 40px; border-top: 1px solid var(--border);
+      color: var(--text-muted); font-size: 13px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .navbar { padding: 16px 20px; }
+      .hero-buttons { flex-direction: column; width: 100%; max-width: 300px; }
+      .features { padding: 40px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="brand-logo">⚡ EXPRESS <span>BANK</span></div>
+    <div class="nav-actions">
+      <a href="login.html">Log In</a>
+      <a href="signup.html" class="btn-nav">Create Account</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="badge">✨ THE NEW STANDARD</div>
+    <h1>Banking at the<br><span class="gold-text">speed of you.</span></h1>
+    <p>The smarter, faster, and more secure way to manage your wealth. No hidden fees. No waiting. Just pure financial freedom.</p>
+    <div class="hero-buttons">
+      <a href="signup.html" class="btn-primary">Open an Account</a>
+      <a href="login.html" class="btn-secondary">Sign In</a>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>Instant Transfers</h3>
+      <p>Send money globally in seconds. No delays, no limits, no hidden fees.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Smart Analytics</h3>
+      <p>Track spending, set budgets, and watch your savings grow effortlessly.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Bank-Grade Security</h3>
+      <p>Your data is encrypted and protected with enterprise-level protocols.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>© 2026 Express Bank. Premium Portfolio Project.</p>
+  </footer>
+
+</body>
+</html>

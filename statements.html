@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — Statements</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg-dark: #050505; --bg-glass: rgba(20, 20, 24, 0.6); --gold: #cba052; --text-main: #f8fafc; --text-muted: #8b949e; --border: rgba(255, 255, 255, 0.08); --green: #2ea043; --red: #f85149; --font-main: 'Inter', sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: var(--bg-dark); background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); color: var(--text-main); font-family: var(--font-main); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    .top-navbar { position: sticky; top: 0; z-index: 900; display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn { background: transparent; border: none; color: var(--text-main); cursor: pointer; padding: 8px; border-radius: 8px; z-index: 10001; }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+    .logo span { color: var(--gold); }
+    .nav-right { display: flex; align-items: center; }
+    .profile-link-nav { display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 50px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); transition: all 0.3s; cursor: pointer; }
+    .profile-link-nav:hover { border-color: var(--gold); }
+    .nav-user-name { font-size: 14px; font-weight: 500; display: none; }
+    @media(min-width: 600px) { .nav-user-name { display: block; } }
+    .avatar-nav { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+    .sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100vh; background: #0d0d10; border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10000; transition: left 0.3s ease; }
+    .sidebar.open { left: 0; }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+    .close-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; }
+    .sidebar-nav { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { display: block; padding: 12px 16px; border-radius: 8px; color: var(--text-muted); font-weight: 500; font-size: 14px; }
+    .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+    .nav-item.active { background: rgba(203, 160, 82, 0.1); color: var(--gold); font-weight: 600; border-left: 3px solid var(--gold); }
+    .sidebar-footer { padding: 24px; border-top: 1px solid var(--border); }
+    .btn-logout { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text-muted); padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-logout:hover { background: rgba(248, 81, 73, 0.1); color: #f85149; }
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+    body.no-scroll { overflow: hidden; }
+    .main-content { padding: 40px 24px; max-width: 1000px; margin: 0 auto; }
+    .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-muted); margin-bottom: 32px; }
+    .statement-card { background: var(--bg-glass); border: 1px solid var(--border); border-radius: 12px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .stmt-info h4 { font-size: 16px; margin-bottom: 4px; }
+    .stmt-info p { font-size: 13px; color: var(--text-muted); }
+    .btn-download { background: rgba(203, 160, 82, 0.1); color: var(--gold); border: 1px solid var(--gold); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+    .btn-download:hover { background: var(--gold); color: #000; }
+  </style>
+</head>
+<body>
+  <header class="top-navbar">
+    <div class="nav-left">
+      <button class="hamburger-btn" id="hamburgerBtn" type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></button>
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+    </div>
+    <div class="nav-right">
+      <a href="profile.html" class="profile-link-nav">
+        <span class="nav-user-name" id="navUserName">Loading...</span>
+        <div class="avatar-nav" id="navAvatar">U</div>
+      </a>
+    </div>
+  </header>
+  <aside class="sidebar" id="sidebarMenu">
+    <div class="sidebar-header"><div class="logo">⚡ EXPRESS <span>BANK</span></div><button class="close-btn" id="closeBtn" type="button"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="transfers.html" class="nav-item">Transfers</a>
+      <a href="statements.html" class="nav-item active">Statements</a>
+      <a href="profile.html" class="nav-item">My Profile</a>
+      <a href="security.html" class="nav-item">Security Center</a>
+      <a href="support.html" class="nav-item">Support</a>
+    </nav>
+    <div class="sidebar-footer"><button id="logoutBtn" class="btn-logout">Log Out</button></div>
+  </aside>
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main-content">
+    <h1 class="page-title">e-Statements</h1>
+    <p class="page-subtitle">Download your monthly account statements.</p>
+
+    <div class="statement-card">
+      <div class="stmt-info"><h4>October 2026 Statement</h4><p>Generated on Nov 1, 2026 • PDF (1.2 MB)</p></div>
+      <button class="btn-download" onclick="alert('Downloading October Statement...')">Download</button>
+    </div>
+    <div class="statement-card">
+      <div class="stmt-info"><h4>September 2026 Statement</h4><p>Generated on Oct 1, 2026 • PDF (1.1 MB)</p></div>
+      <button class="btn-download" onclick="alert('Downloading September Statement...')">Download</button>
+    </div>
+    <div class="statement-card">
+      <div class="stmt-info"><h4>August 2026 Statement</h4><p>Generated on Sep 1, 2026 • PDF (1.4 MB)</p></div>
+      <button class="btn-download" onclick="alert('Downloading August Statement...')">Download</button>
+    </div>
+  </main>
+  
+  <!-- REQUIRED: Load as module -->
+  <script type="module" src="shared.js"></script>
+</body>
+</html>

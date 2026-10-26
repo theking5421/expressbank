@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <style>
+    /* =========================================
+       GLOBAL & VARIABLES (GLOSSY DARK)
+       ========================================= */
+    :root { 
+      --bg-dark: #050505; 
+      --bg-glass: rgba(20, 20, 24, 0.6); 
+      --gold: #cba052; 
+      --text-main: #f8fafc; 
+      --text-muted: #8b949e; 
+      --border: rgba(255, 255, 255, 0.08); 
+      --green: #2ea043; 
+      --red: #f85149; 
+      --font-main: 'Inter', sans-serif; 
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      background-color: var(--bg-dark); 
+      background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); 
+      color: var(--text-main); 
+      font-family: var(--font-main); 
+      -webkit-font-smoothing: antialiased; 
+      overflow-x: hidden; 
+      min-height: 100vh; 
+    }
+
+    body.no-scroll { overflow: hidden; }
+    a { text-decoration: none; color: inherit; }
+
+    /* =========================================
+       TOP NAVBAR
+       ========================================= */
+    .top-navbar { 
+      position: sticky; top: 0; z-index: 900; 
+      display: flex; justify-content: space-between; align-items: center; 
+      height: 72px; padding: 0 24px; 
+      background: rgba(5, 5, 5, 0.85); 
+      backdrop-filter: blur(12px); 
+      border-bottom: 1px solid var(--border); 
+    }
+    
+    .nav-left { display: flex; align-items: center; gap: 12px; }
+    .hamburger-btn { 
+      background: transparent; border: none; color: var(--text-main); 
+      cursor: pointer; display: flex; align-items: center; justify-content: center; 
+      padding: 8px; border-radius: 8px; transition: all 0.2s; z-index: 10001; 
+    }
+    .hamburger-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    .logo { font-size: 18px; font-weight: 800; letter-spacing: 1px; }
+    .logo span { color: var(--gold); }
+
+    .nav-right { display: flex; align-items: center; }
+    .profile-link-nav { 
+      display: flex; align-items: center; gap: 10px; 
+      padding: 6px 12px; border-radius: 50px; 
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); 
+      transition: all 0.3s; cursor: pointer; 
+    }
+    .profile-link-nav:hover { border-color: var(--gold); background: rgba(203, 160, 82, 0.05); }
+    .nav-user-name { font-size: 14px; font-weight: 500; color: var(--text-main); display: none; }
+    @media(min-width: 600px) { .nav-user-name { display: block; } }
+    .avatar-nav { 
+      width: 32px; height: 32px; border-radius: 50%; 
+      background: var(--gold); color: #000; 
+      display: flex; align-items: center; justify-content: center; 
+      font-weight: 700; font-size: 14px; 
+    }
+
+    /* =========================================
+       SIDEBAR MENU
+       ========================================= */
+    .sidebar { 
+      position: fixed; top: 0; left: -300px; 
+      width: 300px; height: 100vh; 
+      background: #0d0d10; border-right: 1px solid var(--border); 
+      display: flex; flex-direction: column; 
+      z-index: 10000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+      box-shadow: 5px 0 30px rgba(0,0,0,0.8); 
+    }
+    .sidebar.open { left: 0; }
+    
+    .sidebar-header { 
+      padding: 24px; border-bottom: 1px solid var(--border); 
+      display: flex; justify-content: space-between; align-items: center; 
+    }
+    .close-btn { 
+      background: transparent; border: none; color: var(--text-muted); 
+      cursor: pointer; padding: 8px; border-radius: 8px; transition: color 0.2s; 
+    }
+    .close-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+    
+    .sidebar-nav { flex: 1; padding: 24px 16px; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { 
+      display: block; padding: 12px 16px; border-radius: 8px; 
+      color: var(--text-muted); font-weight: 500; font-size: 14px; transition: all 0.2s; 
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.03); color: var(--text-main); }
+    .nav-item.active { background: rgba(203, 160, 82, 0.1); color: var(--gold); font-weight: 600; border-left: 3px solid var(--gold); }
+    
+    .sidebar-footer { padding: 24px; border-top: 1px solid var(--border); }
+    .btn-logout { 
+      width: 100%; background: transparent; 
+      border: 1px solid var(--border); color: var(--text-muted); 
+      padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s; 
+    }
+    .btn-logout:hover { background: rgba(248, 81, 73, 0.1); border-color: var(--red); color: var(--red); }
+
+    /* Overlay */
+    .overlay { 
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; 
+      background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); 
+      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity 0.3s; 
+    }
+    .overlay.active { opacity: 1; pointer-events: auto; }
+
+    /* =========================================
+       MAIN CONTENT
+       ========================================= */
+    .main-content { padding: 32px 24px; max-width: 1200px; margin: 0 auto; }
+    
+    .dashboard-header { margin-bottom: 24px; }
+    .page-title { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-muted); font-size: 14px; }
+
+    .top-row { display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
+    
+    .balance-card { 
+      background: var(--bg-glass); backdrop-filter: blur(16px); 
+      border: 1px solid rgba(203, 160, 82, 0.4); border-radius: 16px; 
+      padding: 24px; position: relative; overflow: hidden; 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); 
+      display: flex; flex-direction: column; justify-content: space-between; 
+    }
+    .balance-card::before { 
+      content: ''; position: absolute; top: -50%; right: -20%; 
+      width: 300px; height: 300px; 
+      background: radial-gradient(circle, rgba(203, 160, 82, 0.15) 0%, transparent 60%); 
+      pointer-events: none; 
+    }
+    
+    .balance-label { font-size: 14px; color: var(--text-muted); font-weight: 500; margin-bottom: 12px; display: flex; justify-content: space-between;}
+    .balance-amount-row { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .balance-amount { font-size: 40px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); }
+    
+    .hide-btn { 
+      background: rgba(255,255,255,0.05); border: 1px solid var(--border); 
+      color: var(--text-muted); border-radius: 50%; width: 40px; height: 40px; 
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; 
+    }
+    .hide-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+    
+    .account-details { 
+      display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); 
+      border-top: 1px solid var(--border); padding-top: 16px; 
+      font-family: monospace; letter-spacing: 1px; 
+    }
+
+    /* Quick Actions */
+    .quick-actions-panel { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+    .quick-actions-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-main); }
+    .action-row { display: flex; flex-direction: row; gap: 12px; width: 100%; overflow-x: auto; padding-bottom: 8px; }
+    .action-row::-webkit-scrollbar { display: none; }
+    .action-btn { flex: 1; min-width: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 16px 8px; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border); border-radius: 12px; transition: all 0.3s; text-align: center; }
+    .action-btn:hover { background: rgba(203, 160, 82, 0.05); border-color: var(--gold); transform: translateY(-3px); }
+    .square-icon { width: 44px; height: 44px; background: rgba(255, 255, 255, 0.05); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--gold); transition: all 0.3s; }
+    .action-btn:hover .square-icon { background: var(--gold); color: #000; }
+    .action-label { font-size: 12px; font-weight: 600; color: var(--text-main); line-height: 1.2; }
+
+    /* Transactions */
+    .bottom-row { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .panel-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-header h3 { font-size: 16px; font-weight: 600; color: var(--text-main); }
+    .view-all { color: var(--gold); font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .view-all:hover { text-decoration: underline; }
+    
+    .table-responsive { overflow-x: auto; width: 100%; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 16px 20px; font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+    td { padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    tr:last-child td { border-bottom: none; }
+    .tx-type { display: flex; align-items: center; gap: 12px; font-weight: 500; color: var(--text-main); }
+    .tx-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .tx-icon.credit { background: rgba(46, 160, 67, 0.1); color: var(--green); }
+    .tx-icon.debit { background: rgba(248, 81, 73, 0.1); color: var(--red); }
+    .amount { font-family: monospace; font-weight: 600; font-size: 14px; }
+    .amount.credit { color: var(--green); }
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(46, 160, 67, 0.1); color: var(--green); border: 1px solid rgba(46, 160, 67, 0.2); display: inline-block; }
+    .status-badge.pending { background: rgba(203, 160, 82, 0.1); color: var(--gold); border: 1px solid rgba(203, 160, 82, 0.2); }
+
+    /* =========================================
+       MOBILE TABLE FIX
+       ========================================= */
+    @media (max-width: 600px) {
+      .table-responsive {
+        overflow-x: auto;
+      }
+      table {
+        min-width: 500px; /* Forces a scrollbar instead of squishing the columns */
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP NAVBAR -->
+  <header class="top-navbar">
+    <div class="nav-left">
+      <button class="hamburger-btn" id="hamburgerBtn" type="button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+    </div>
+    <div class="nav-right">
+      <a href="profile.html" class="profile-link-nav">
+        <span class="nav-user-name" id="navUserName">Loading...</span>
+        <div class="avatar-nav" id="navAvatar">U</div>
+      </a>
+    </div>
+  </header>
+
+  <!-- SIDEBAR MENU -->
+  <aside class="sidebar" id="sidebarMenu">
+    <div class="sidebar-header">
+      <div class="logo">⚡ EXPRESS <span>BANK</span></div>
+      <button class="close-btn" id="closeBtn" type="button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-item active">Dashboard</a>
+      <a href="transfers.html" class="nav-item">Transfers</a>
+      <a href="statements.html" class="nav-item">Statements</a>
+      <a href="profile.html" class="nav-item">My Profile</a>
+      <a href="security.html" class="nav-item">Security Center</a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn-logout" type="button">Log Out</button>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay"></div>
+
+  <main class="main-content">
+    
+    <header class="dashboard-header">
+      <h1 class="page-title">Account Overview</h1>
+      <p class="page-subtitle">Welcome back, <span id="displayName">Customer</span>.</p>
+    </header>
+
+    <div class="top-row">
+      <div class="balance-card">
+        <div>
+          <div class="balance-label">
+            <span>Available Balance</span>
+            <span>USD</span>
+          </div>
+          <div class="balance-amount-row">
+            <div class="balance-amount" id="mainBalance">Loading...</div>
+            <button class="hide-btn" id="toggleBalanceBtn" type="button">
+              <svg id="eyeOpen" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg id="eyeClosed" style="display: none;" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+            </button>
+          </div>
+        </div>
+        <div class="account-details">
+          <span id="cardHolderName">LOADING...</span>
+          <span>Acct: •••• 4829</span>
+        </div>
+      </div>
+
+      <div class="quick-actions-panel">
+        <h3 class="quick-actions-title">Quick Actions</h3>
+        <div class="action-row">
+          <a href="transfer-express.html" class="action-btn">
+            <div class="square-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg></div>
+            <span class="action-label">To Express</span>
+          </a>
+          <a href="transfer-other.html" class="action-btn">
+            <div class="square-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18"/></svg></div>
+            <span class="action-label">Other Banks</span>
+          </a>
+          <a href="transfer-international.html" class="action-btn">
+            <div class="square-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
+            <span class="action-label">International</span>
+          </a>
+          <a href="statements.html" class="action-btn">
+            <div class="square-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+            <span class="action-label">Statement</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-row">
+      <div class="panel-header">
+        <h3>Recent Transactions</h3>
+        <a href="history.html" class="view-all">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Description</th><th>Status</th><th>Amount</th></tr>
+          </thead>
+          <tbody id="transactionsBody">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                Loading...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- FIREBASE SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD76E6QHruNuqLL_MInuzI9VyKFey1zvLw", authDomain: "express-uts.firebaseapp.com",
+      projectId: "express-uts", storageBucket: "express-uts.firebasestorage.app",
+      messagingSenderId: "812145406981", appId: "1:812145406981:web:84797ac9d423b858dbd86c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const userEmail = localStorage.getItem("currentUser");
+    const userUID = localStorage.getItem("currentUID");
+    const userName = localStorage.getItem("currentName") || "Customer";
+
+    // Populate UI
+    document.getElementById("displayName").textContent = userName.split(' ')[0];
+    document.getElementById("cardHolderName").textContent = userName.toUpperCase();
+    document.getElementById("navUserName").textContent = userName.split(' ')[0];
+    document.getElementById("navAvatar").textContent = userName.charAt(0).toUpperCase();
+
+    // Fetch Live Balance
+    if (userUID) {
+      db.collection("users").doc(userUID).onSnapshot((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          localStorage.setItem("currentBalance", data.balance);
+          document.getElementById("mainBalance").textContent = "$" + Number(data.balance || 0).toLocaleString('en-US', {minimumFractionDigits: 2});
+        }
+      });
+    }
+
+    // Fetch Transactions
+    const txBody = document.getElementById("transactionsBody");
+    if (userEmail && txBody) {
+      db.collection("transactions").onSnapshot((snapshot) => {
+        let userTransactions = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.senderEmail === userEmail || data.recipientEmail === userEmail) {
+            userTransactions.push(data);
+          }
+        });
+
+        userTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (userTransactions.length === 0) {
+          txBody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 20px;">No recent transactions found.</td></tr>`;
+          return;
+        }
+
+        let html = "";
+        userTransactions.slice(0, 5).forEach((data) => {
+          const isCredit = data.recipientEmail === userEmail;
+          const amountClass = isCredit ? "credit" : "";
+          const prefix = isCredit ? "+" : "-";
+          const iconClass = isCredit ? "credit" : "debit";
+          const iconArrow = isCredit ? "↓" : "↑";
+
+          html += `
+            <tr>
+              <td>${data.date.split(',')[0]}</td>
+              <td><div class="tx-type"><div class="tx-icon ${iconClass}">${iconArrow}</div>${data.memo || data.type}</div></td>
+              <td><span class="status-badge ${data.status === 'Pending' ? 'pending' : ''}">${data.status}</span></td>
+                           <td class="amount ${amountClass}">${prefix}$${Number(data.amount).toFixed(2)}</td>
+            </tr>
+          `;
+        });
+        txBody.innerHTML = html;
+      });
+    }
+
+    // UI Logic
+    const sidebar = document.getElementById("sidebarMenu");
+    const overlay = document.getElementById("overlay");
+    document.getElementById("hamburgerBtn").onclick = () => { sidebar.classList.add("open"); overlay.classList.add("active"); document.body.classList.add("no-scroll"); };
+    const closeMenu = () => { sidebar.classList.remove("open"); overlay.classList.remove("active"); document.body.classList.remove("no-scroll"); };
+    document.getElementById("closeBtn").onclick = closeMenu;
+    overlay.onclick = closeMenu;
+
+    let isHidden = false;
+    document.getElementById("toggleBalanceBtn").onclick = () => {
+      const balanceEl = document.getElementById("mainBalance");
+      const eyeOpen = document.getElementById("eyeOpen");
+      const eyeClosed = document.getElementById("eyeClosed");
+      isHidden = !isHidden;
+      if (isHidden) {
+        balanceEl.textContent = "••••••";
+        eyeOpen.style.display = "none";
+        eyeClosed.style.display = "block";
+      } else {
+        const realBal = localStorage.getItem("currentBalance") || 0;
+        balanceEl.textContent = "$" + Number(realBal).toLocaleString('en-US', {minimumFractionDigits: 2});
+        eyeOpen.style.display = "block";
+        eyeClosed.style.display = "none";
+      }
+    };
+
+    document.getElementById("logoutBtn").onclick = () => {
+      localStorage.clear();
+      window.location.href = "index.html";
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Bank — Transaction History</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root { 
+      --bg-dark: #050505; --bg-glass: rgba(20, 20, 24, 0.6); --gold: #cba052; 
+      --text-main: #f8fafc; --text-muted: #8b949e; --border: rgba(255, 255, 255, 0.08); 
+      --green: #2ea043; --red: #f85149; 
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg-dark); background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); color: var(--text-main); min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+
+    /* Navbar */
+    .top-navbar { position: sticky; top: 0; z-index: 900; display: flex; justify-content: space-between; align-items: center; height: 72px; padding: 0 24px; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 14px; transition: 0.2s; }
+    .back-btn:hover { color: var(--gold); }
+
+    /* Main Content */
+    .main-content { padding: 40px 24px; max-width: 900px; margin: 0 auto; }
+    .page-title { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .page-subtitle { color: var(--text-muted); margin-bottom: 32px; }
+
+    /* Transaction List */
+    .tx-container { background: var(--bg-glass); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .tx-item { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); transition: 0.2s; }
+    .tx-item:hover { background: rgba(255,255,255,0.02); }
+    .tx-item:last-child { border-bottom: none; }
+    
+    .tx-left { display: flex; align-items: center; gap: 16px; }
+    .tx-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+    .tx-icon.credit { background: rgba(46, 160, 67, 0.1); color: var(--green); }
+    .tx-icon.debit { background: rgba(248, 81, 73, 0.1); color: var(--red); }
+    
+    .tx-details h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .tx-details p { font-size: 12px; color: var(--text-muted); }
+    
+    .tx-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .tx-amount { font-family: monospace; font-size: 16px; font-weight: 700; }
+    .tx-amount.credit { color: var(--green); }
+    
+    .btn-download { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+    .btn-download:hover { background: var(--gold); color: #000; border-color: var(--gold); }
+  </style>
+</head>
+<body>
+
+  <header class="top-navbar">
+    <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+    <div class="logo">⚡ EXPRESS <span style="color:var(--gold)">BANK</span></div>
+  </header>
+
+  <main class="main-content">
+    <h1 class="page-title">Transaction History</h1>
+    <p class="page-subtitle">View and download your recent statements.</p>
+
+    <div class="tx-container" id="historyList">
+      <div style="padding: 40px; text-align: center; color: var(--text-muted);">Loading history...</div>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyD76E6QHruNuqLL_MInuzI9VyKFey1zvLw", authDomain: "express-uts.firebaseapp.com",
+      projectId: "express-uts", storageBucket: "express-uts.firebasestorage.app",
+      messagingSenderId: "812145406981", appId: "1:812145406981:web:84797ac9d423b858dbd86c"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const userEmail = localStorage.getItem("currentUser");
+    const userName = localStorage.getItem("currentName");
+
+    // Fetch Transactions
+    db.collection("transactions").onSnapshot((snapshot) => {
+      let myTx = [];
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.senderEmail === userEmail || data.recipientEmail === userEmail) {
+          myTx.push(data);
+        }
+      });
+
+      myTx.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const list = document.getElementById("historyList");
+
+      if (myTx.length === 0) {
+        list.innerHTML = `<div style="padding: 40px; text-align: center; color: var(--text-muted);">No transactions found.</div>`;
+        return;
+      }
+
+      list.innerHTML = myTx.map((t, index) => {
+        const isCredit = t.recipientEmail === userEmail;
+        const prefix = isCredit ? "+" : "-";
+        const icon = isCredit ? "↓" : "↑";
+        const iconClass = isCredit ? "credit" : "debit";
+
+        return `
+          <div class="tx-item">
+            <div class="tx-left">
+              <div class="tx-icon ${iconClass}">${icon}</div>
+              <div class="tx-details">
+                <h4>${t.memo || t.type}</h4>
+                <p>${t.date}</p>
+              </div>
+            </div>
+            <div class="tx-right">
+              <div class="tx-amount ${iconClass}">${prefix}$${Number(t.amount).toFixed(2)}</div>
+              <button class="btn-download" onclick="downloadReceipt(${index})">Download PDF</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // Store for PDF generation
+      window.myTransactions = myTx;
+    });
+
+    // Generate PDF Receipt
+    window.downloadReceipt = function(index) {
+      const t = window.myTransactions[index];
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFontSize(22);
+      doc.setTextColor(30, 58, 138); // Navy Blue
+      doc.text("EXPRESS BANK", 20, 20);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text("Official Transaction Receipt", 20, 30);
+      doc.text("Date: " + t.date, 20, 40);
+
+      // Line
+      doc.setLineWidth(0.5);
+      doc.line(20, 45, 190, 45);
+
+      // Details
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Account Holder: " + userName, 20, 60);
+      doc.text("Sender: " + t.senderEmail, 20, 70);
+      doc.text("Receiver: " + t.recipientEmail, 20, 80);
+      doc.text("Description: " + (t.memo || t.type), 20, 90);
+
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text("Amount: $" + Number(t.amount).toFixed(2), 20, 110);
+
+      doc.setFontSize(10);
+      doc.setTextColor(150, 150, 150);
+      doc.text("Thank you for banking with Express Bank.", 20, 130);
+
+      doc.save(`ExpressBank_Receipt_${t.date.replace(/[/,: ]/g, '_')}.pdf`);
+    };
+  </script>
+</body>
+</html>

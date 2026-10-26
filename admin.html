@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Express Bank</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* =========================================
+     EXPRESS BANK GLOSSY DARK THEME
+     ========================================= */
+  :root {
+    --bg-dark: #050505;
+    --bg-glass: rgba(20, 20, 24, 0.6);
+    --gold: #cba052;
+    --gold-gradient: linear-gradient(135deg, #d4b26a 0%, #cba052 50%, #99742c 100%);
+    --text-main: #f8fafc;
+    --text-muted: #8b949e;
+    --border: rgba(255, 255, 255, 0.08);
+    --green: #2ea043;
+    --red: #ef4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  body { 
+    background-color: var(--bg-dark); 
+    background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%);
+    color: var(--text-main); 
+    overflow-x: hidden; 
+    min-height: 100vh;
+  }
+  
+  /* =========================================
+     TOP NAVBAR
+     ========================================= */
+  .adm-top { background: rgba(13, 13, 16, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 40; }
+  .adm-top-inner { max-width: 900px; margin: 0 auto; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .adm-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1rem; color: var(--text-main); text-decoration: none; }
+  .adm-brand-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--gold-gradient); color: #000; display: grid; place-items: center; font-size: 16px; flex-shrink: 0; font-weight: 900; }
+  .adm-brand-sub { font-size: .6rem; font-weight: 800; letter-spacing: .14em; color: var(--gold); background: rgba(203, 160, 82, 0.1); padding: 2px 6px; border-radius: 4px; margin-top: 4px; width: fit-content; border: 1px solid rgba(203, 160, 82, 0.2); }
+  .adm-signout { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-main); padding: 8px 14px; border-radius: 10px; font-family: inherit; font-size: .8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
+  .adm-signout:hover { background: rgba(248, 81, 73, 0.1); border-color: var(--red); color: var(--red); }
+  
+  .adm-main { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+  
+  /* Stats */
+  .adm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .adm-stat { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 14px; padding: 16px 14px; }
+  .adm-stat-label { font-size: .65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; margin-bottom: 8px; }
+  .adm-stat-val { font-size: 1.2rem; font-weight: 800; color: var(--gold); letter-spacing: -.02em; word-break: break-all; }
+  .adm-stat-sub { font-size: .7rem; color: var(--text-muted); margin-top: 4px; }
+
+  /* Tabs */
+  .adm-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 4px; }
+  .adm-tabs::-webkit-scrollbar { display: none; }
+  .adm-tab { background: var(--bg-glass); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 16px; border-radius: 100px; font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; transition: 0.2s; }
+  .adm-tab:hover { background: rgba(255,255,255,0.05); color: var(--text-main); }
+  .adm-tab.active { background: var(--gold); color: #000; border-color: var(--gold); }
+
+  /* Panels */
+  .adm-panel { display: none; } .adm-panel.active { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .adm-search { width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .88rem; background: var(--bg-glass); color: white; margin-bottom: 16px; outline: none; transition: 0.2s; }
+  .adm-search:focus { border-color: var(--gold); }
+
+  /* Cards */
+  .adm-card { background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 12px; }
+  .adm-user-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 16px; }
+  .adm-avatar { width: 44px; height: 44px; border-radius: 12px; background: linear-gradient(135deg, #1e1e24 0%, #0d0d12 100%); color: var(--gold); border: 1px solid var(--gold); display: grid; place-items: center; font-size: .9rem; font-weight: 700; flex-shrink: 0; }
+  .adm-user-info { flex: 1; min-width: 0; }
+  .adm-user-name { font-size: .95rem; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+  .adm-user-email { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+  
+  .adm-user-meta { display: flex; gap: 16px; padding: 14px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .adm-user-meta-item { flex: 1; min-width: 0; }
+  .adm-user-meta-label { font-size: .65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+  .adm-user-meta-val { font-size: .88rem; font-weight: 700; color: var(--text-main); margin-top: 4px; font-family: monospace; }
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 100px; font-size: .7rem; font-weight: 700; letter-spacing: .02em; }
+  .badge.active { background: rgba(46, 160, 67, 0.1); color: var(--green); border: 1px solid rgba(46, 160, 67, 0.2); }
+  .badge.blocked { background: rgba(248, 81, 73, 0.1); color: var(--red); border: 1px solid rgba(248, 81, 73, 0.2); }
+  .badge.open { background: rgba(203, 160, 82, 0.1); color: var(--gold); border: 1px solid rgba(203, 160, 82, 0.2); }
+
+  /* Actions */
+  .adm-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .adm-btn { border: 1px solid var(--border); background: rgba(255,255,255,0.02); color: var(--text-main); padding: 10px 12px; border-radius: 10px; font-family: inherit; font-size: .78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; flex: 1; justify-content: center; min-width: 0; transition: 0.2s; }
+  .adm-btn.manage { color: var(--gold); border-color: rgba(203, 160, 82, 0.4); background: rgba(203, 160, 82, 0.05); flex: 1 1 100%; }
+  .adm-btn.manage:hover { background: var(--gold); color: #000; }
+
+  /* Login Gate */
+  #loginGate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg-dark); background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%); }
+  #loginGate .gate-card { width: 100%; max-width: 420px; background: var(--bg-glass); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 20px; padding: 40px 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+  .gate-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(203, 160, 82, 0.1); border: 1px solid rgba(203, 160, 82, 0.2); color: var(--gold); display: grid; place-items: center; font-size: 1.4rem; margin-bottom: 20px; }
+  
+  .adm-field { margin-bottom: 20px; }
+  .adm-field label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
+  .adm-field input, .adm-field select { width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; font-size: .9rem; background: rgba(0,0,0,0.3); color: white; outline: none; transition: 0.2s; }
+  .adm-field input:focus, .adm-field select:focus { border-color: var(--gold); }
+  
+  .btn-primary { background: var(--gold); color: #000; transition: 0.2s; }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .error-msg { color: var(--red); font-size: .82rem; margin-bottom: 16px; display: none; padding: 12px; background: rgba(248, 81, 73, 0.1); border: 1px solid rgba(248, 81, 73, 0.2); border-radius: 8px; }
+
+  .adm-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--bg-glass); border: 1px solid var(--border); border-radius: 14px; }
+  .reply-box { display: flex; gap: 10px; margin-top: 12px; }
+  .reply-input { flex: 1; padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; background: rgba(0,0,0,0.3); color: white; }
+  .reply-input:focus { border-color: var(--gold); }
+
+  /* =========================================
+     FULL PAGE MANAGEMENT VIEW
+     ========================================= */
+  #managementView {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #050505; z-index: 1000; overflow-y: auto;
+    display: none; opacity: 0; transition: opacity 0.3s ease;
+    background-image: radial-gradient(circle at top right, rgba(203, 160, 82, 0.05) 0%, transparent 40%);
+  }
+  #managementView.show { display: block; opacity: 1; }
+
+  .manage-topbar {
+    background: rgba(13, 13, 16, 0.9); backdrop-filter: blur(12px); 
+    padding: 16px 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 20px;
+    position: sticky; top: 0; z-index: 10;
+  }
+  .btn-back {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+    color: var(--text-main); padding: 10px 18px; border-radius: 10px;
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; transition: 0.2s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,0.1); border-color: var(--gold); color: var(--gold); }
+  .manage-page-title { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; }
+
+  .manage-container { max-width: 650px; margin: 40px auto; padding: 0 24px 80px; }
+  
+  /* Profile Card Header */
+  .profile-card {
+    background: var(--bg-glass); backdrop-filter: blur(20px); 
+    border: 1px solid rgba(203, 160, 82, 0.2); border-radius: 24px;
+    padding: 32px; display: flex; align-items: center; gap: 24px; margin-bottom: 32px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .profile-avatar-large {
+    width: 90px; height: 90px; border-radius: 24px; background: linear-gradient(135deg, #1e1e24 0%, #0d0d12 100%);
+    color: var(--gold); border: 2px solid var(--gold);
+    display: grid; place-items: center; font-size: 2.2rem; font-weight: 800; flex-shrink: 0;
+  }
+  .profile-details h1 { color: var(--text-main); font-size: 1.8rem; margin-bottom: 4px; font-weight: 700; letter-spacing: -0.5px; }
+  .profile-details p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px; }
+  
+  /* Data Grid */
+  .manage-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px; }
+  .manage-stat { 
+    background: var(--bg-glass); border: 1px solid var(--border); border-radius: 16px; 
+    padding: 20px 24px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .manage-stat-label { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 8px; }
+  .manage-stat-val { color: var(--text-main); font-size: 1.3rem; font-weight: 800; font-family: monospace; letter-spacing: -0.5px; }
+  
+  /* Sections */
+  .manage-section-box { 
+    background: var(--bg-glass); backdrop-filter: blur(20px); 
+    border: 1px solid var(--border); border-radius: 20px; 
+    padding: 28px; margin-bottom: 24px; 
+  }
+  .manage-section-box h3 { 
+    color: var(--text-main); font-size: 1.15rem; font-weight: 600; 
+    margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); 
+    display: flex; align-items: center; gap: 10px;
+  }
+  
+  /* Forms */
+  .process-form { display: flex; flex-direction: column; gap: 20px; }
+  .process-row { display: flex; gap: 16px; }
+  .process-row > * { flex: 1; }
+  
+  .manage-field label { display: block; color: var(--text-muted); font-size: 0.8rem; font-weight: 600; margin-bottom: 8px; }
+  
+  .manage-input-wrapper { position: relative; display: flex; align-items: center; }
+  .manage-input-wrapper i { position: absolute; left: 16px; color: var(--text-muted); font-size: 0.9rem; }
+  
+  .manage-input {
+    width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: var(--text-main);
+    padding: 16px; border-radius: 12px; font-family: inherit; font-size: 1rem; outline: none; transition: 0.2s;
+  }
+  .manage-input.with-icon { padding-left: 42px; }
+  .manage-input:focus { border-color: var(--gold); background: rgba(0,0,0,0.6); }
+  
+  .btn-process {
+    width: 100%; background: var(--gold-gradient); color: #000; border: none;
+    padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1rem;
+    cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .btn-process:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(203, 160, 82, 0.2); }
+  .btn-process:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* Block Account Danger Zone */
+  .danger-zone { border-color: rgba(239, 68, 68, 0.3); }
+  .danger-zone h3 { color: #ef4444; border-bottom-color: rgba(239, 68, 68, 0.2); }
+  .danger-text { color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px; line-height: 1.6; }
+  
+  .btn-block {
+    width: 100%; background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.5);
+    padding: 18px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; transition: 0.2s;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .btn-block:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+  @media (max-width: 500px) { 
+    .manage-grid { grid-template-columns: 1fr; }
+    .process-row { flex-direction: column; }
+    .profile-card { flex-direction: column; text-align: center; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN GATE -->
+<div id="loginGate">
+  <div class="gate-card">
+    <div class="gate-icon"><i class="fas fa-shield-halved"></i></div>
+    <h2 style="font-size:1.5rem;margin-bottom:6px; color:var(--text-main);">Admin Sign In</h2>
+    <p style="color:var(--text-muted);font-size:.88rem;margin-bottom:24px;">Authorized personnel only. Please enter your credentials.</p>
+    
+    <div id="loginError" class="error-msg"></div>
+
+    <form id="loginForm">
+      <div class="adm-field"><label>Admin Email</label><input type="email" id="adminEmail" placeholder="admin@express.com" required /></div>
+      <div class="adm-field"><label>Password</label><input type="password" id="adminPassword" placeholder="••••••••" required /></div>
+      <button type="submit" class="btn-primary" id="loginBtn" style="width:100%; border:none; padding:14px; border-radius:10px; font-weight:700; cursor:pointer; font-size:15px;"><i class="fas fa-lock-open"></i> Secure Login</button>
+    </form>
+    
+    <div style="text-align:center;margin-top:24px;"><a href="index.html" style="font-size:.8rem;color:var(--text-muted); text-decoration:none; transition: 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#8b949e'"><i class="fas fa-arrow-left"></i> Back to website</a></div>
+  </div>
+</div>
+
+<!-- MAIN DASHBOARD -->
+<div id="adminPanel" style="display:none;">
+  <header class="adm-top">
+    <div class="adm-top-inner">
+      <a href="admin.html" class="adm-brand">
+        <div class="adm-brand-mark">⚡</div>
+        <div><div>Express Bank</div><div class="adm-brand-sub">ADMIN</div></div>
+      </a>
+      <button class="adm-signout" id="signOutBtn"><i class="fas fa-arrow-right-from-bracket"></i> Sign out</button>
+    </div>
+  </header>
+
+  <main class="adm-main">
+    
+    <!-- STATS -->
+    <div class="adm-stats">
+      <div class="adm-stat">
+        <div class="adm-stat-label">Customers</div>
+        <div class="adm-stat-val" id="statUsers">—</div>
+        <div class="adm-stat-sub">Registered users</div>
+      </div>
+      <div class="adm-stat">
+        <div class="adm-stat-label">Deposits</div>
+        <div class="adm-stat-val" id="statBalance">—</div>
+        <div class="adm-stat-sub">All accounts</div>
+      </div>
+      <div class="adm-stat">
+        <div class="adm-stat-label">Open Tickets</div>
+        <div class="adm-stat-val" id="statTickets">—</div>
+        <div class="adm-stat-sub">Awaiting response</div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="adm-tabs">
+      <button class="adm-tab active" data-tab="users" onclick="openTab(event, 'panel-users')"><i class="fas fa-users"></i> Customers</button>
+      <button class="adm-tab" data-tab="transactions" onclick="openTab(event, 'panel-transactions')"><i class="fas fa-exchange-alt"></i> Transactions</button>
+      <button class="adm-tab" data-tab="tickets" onclick="openTab(event, 'panel-tickets')"><i class="fas fa-headset"></i> Support Tickets</button>
+    </div>
+
+    <!-- USERS PANEL -->
+    <section class="adm-panel active" id="panel-users">
+      <input type="text" id="userSearch" class="adm-search" placeholder="Search name or email…" />
+      <div id="usersList">
+        <div class="adm-empty"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </section>
+
+    <!-- TRANSACTIONS PANEL -->
+    <section class="adm-panel" id="panel-transactions">
+      <div id="globalTransactionsList">
+        <div class="adm-empty"><i class="fas fa-circle-notch fa-spin"></i><p>Loading transactions…</p></div>
+      </div>
+    </section>
+
+    <!-- TICKETS PANEL -->
+    <section class="adm-panel" id="panel-tickets">
+      <div id="ticketsList">
+        <div class="adm-empty"><i class="fas fa-circle-notch fa-spin"></i><p>Loading…</p></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- =========================================
+     FULL PAGE MANAGEMENT VIEW
+     ========================================= -->
+<div id="managementView">
+  
+  <div class="manage-topbar">
+    <button class="btn-back" onclick="closeManagementView()">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </button>
+    <div class="manage-page-title">Account Management</div>
+  </div>
+
+  <div class="manage-container">
+    
+    <!-- Customer Header -->
+    <div class="profile-card">
+      <div class="profile-avatar-large" id="manageAvatar">U</div>
+      <div class="profile-details">
+        <h1 id="manageName">Customer Name</h1>
+        <p id="manageEmail">email@example.com</p>
+        <span class="badge active" id="manageStatusBadge">Active</span>
+      </div>
+    </div>
+
+    <!-- Core Stats -->
+    <div class="manage-grid">
+      <div class="manage-stat">
+        <div class="manage-stat-label">Account Number</div>
+        <div class="manage-stat-val" id="manageAccountNum">•••• 0000</div>
+      </div>
+      <div class="manage-stat">
+        <div class="manage-stat-label">Current Balance</div>
+        <div class="manage-stat-val" id="manageBalance" style="color: var(--gold);">$0.00</div>
+      </div>
+      <div class="manage-stat">
+        <div class="manage-stat-label">Date Joined</div>
+        <div class="manage-stat-val" id="manageDateJoined" style="font-size: 1.1rem;">Oct 2026</div>
+      </div>
+      <div class="manage-stat">
+        <div class="manage-stat-label">System ID</div>
+        <div class="manage-stat-val" id="manageID" style="font-size: 0.85rem; opacity: 0.5;">—</div>
+      </div>
+    </div>
+
+    <!-- Credit / Debit Form -->
+      <div class="manage-section-box">
+      <h3><i class="fas fa-wallet" style="color: var(--gold);"></i> Adjust Customer Balance</h3>
+      <div class="process-form">
+        <div class="process-row">
+          <div class="manage-field">
+            <label>Transaction Type</label>
+            <select id="processAction" class="manage-input" style="cursor: pointer;">
+              <option value="Credit">Credit (Add Funds)</option>
+              <option value="Debit">Debit (Remove Funds)</option>
+            </select>
+          </div>
+          <div class="manage-field">
+            <label>Amount</label>
+            <div class="manage-input-wrapper">
+              <i class="fas fa-dollar-sign"></i>
+              <input type="number" id="processAmount" class="manage-input with-icon" placeholder="0.00" min="1" step="0.01">
+            </div>
+          </div>
+        </div>
+        <button class="btn-process" id="processBtn" onclick="executeTransaction()">
+          <i class="fas fa-check-circle"></i> Process Transaction
+        </button>
+      </div>
+    </div>
+
+    <!-- Block Account Form -->
+    <div class="manage-section-box danger-zone">
+      <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone: Account Access</h3>
+      <p class="danger-text">
+        Blocking an account will immediately freeze all customer funds, prevent any outgoing transfers, and deny login access. This action is reversible.
+      </p>
+      <button class="btn-block" id="blockBtn" onclick="executeBlockToggle()">
+        <i class="fas fa-ban"></i> Block Account
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // ==========================================
+  // YOUR EXACT FIREBASE CONFIGURATION
+  // ==========================================
+  const firebaseConfig = {
+    apiKey: "AIzaSyD76E6QHruNuqLL_MInuzI9VyKFey1zvLw",
+    authDomain: "express-uts.firebaseapp.com",
+    projectId: "express-uts",
+    storageBucket: "express-uts.firebasestorage.app",
+    messagingSenderId: "812145406981",
+    appId: "1:812145406981:web:84797ac9d423b858dbd86c",
+    measurementId: "G-8EH3H5NF18"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const ADMIN_EMAIL = "arinzenneji00@gmail.com";
+  const $ = id => document.getElementById(id);
+  
+  let users = [], tickets = [];
+  let unsubs = [];
+  let currentManagedUser = null;
+
+  // ==========================================
+  // LOGIN LOGIC
+  // ==========================================
+  $('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault(); 
+    const errorBox = $('loginError'); 
+    errorBox.style.display = 'none';
+    $('loginBtn').disabled = true; 
+    $('loginBtn').innerHTML = 'Signing in…';
+
+    try {
+      if (auth.currentUser) await auth.signOut();
+      const email = $('adminEmail').value.trim();
+      const pass = $('adminPassword').value;
+      const cred = await auth.signInWithEmailAndPassword(email, pass);
+      
+      if (cred.user.email !== ADMIN_EMAIL) { 
+        await auth.signOut(); 
+        throw new Error("Unauthorized: Not an admin account."); 
+      }
+    } catch (err) { 
+      alert("Login Error: " + err.message); 
+      errorBox.textContent = err.message; 
+      errorBox.style.display = 'block'; 
+    } finally { 
+      $('loginBtn').disabled = false; 
+      $('loginBtn').innerHTML = 'Sign in'; 
+    }
+  });
+
+  $('signOutBtn').addEventListener('click', async () => { 
+    await auth.signOut(); 
+    window.location.reload(); 
+  });
+
+  // ==========================================
+  // AUTH STATE
+  // ==========================================
+  auth.onAuthStateChanged((user) => {
+    if (user && user.email === ADMIN_EMAIL) {
+      $('loginGate').style.display = 'none'; 
+      $('adminPanel').style.display = 'block'; 
+      startListeners();
+    } else {
+      stopListeners(); 
+      $('loginGate').style.display = 'flex'; 
+      $('adminPanel').style.display = 'none';
+    }
+  });
+
+  function startListeners() {
+    if (unsubs.length) return;
+    
+    unsubs.push(db.collection('users').onSnapshot(snap => { 
+      users = []; 
+      snap.forEach(d => users.push({ id: d.id, ...d.data() })); 
+      renderUsers(); 
+      renderStats(); 
+      
+      if (currentManagedUser) {
+        const updated = users.find(u => u.id === currentManagedUser.id);
+        if (updated) {
+          currentManagedUser = updated;
+          updateManageViewUI();
+        }
+      }
+    }));
+
+    // Listen to Global Transactions
+    unsubs.push(db.collection('transactions').onSnapshot(snap => { 
+      const globalTransactions = [];
+      snap.forEach(d => globalTransactions.push({ id: d.id, ...d.data() }));
+      renderGlobalTransactions(globalTransactions);
+    }));
+
+    unsubs.push(db.collection('support_tickets').onSnapshot(snap => { 
+      tickets = []; 
+      snap.forEach(d => tickets.push({ id: d.id, ...d.data() })); 
+      renderTickets(); 
+      renderStats(); 
+    }));
+  }
+
+  function stopListeners() { unsubs.forEach(u => u()); unsubs = []; }
+
+  // ==========================================
+  // STATS
+  // ==========================================
+  function renderStats() {
+    $('statUsers').textContent = users.length;
+    const total = users.reduce((s, u) => s + Number(u.balance || 0), 0);
+    $('statBalance').textContent = "$" + total.toLocaleString('en-US', {minimumFractionDigits: 2});
+    $('statTickets').textContent = tickets.filter(t => t.status !== "Resolved").length;
+  }
+
+  // ==========================================
+  // RENDER USERS
+  // ==========================================
+  function renderUsers() {
+    const q = ($('userSearch').value || '').trim().toLowerCase();
+    const filtered = users.filter(u => !q || (u.fullName || '').toLowerCase().includes(q) || (u.email || '').toLowerCase().includes(q));
+    const el = $('usersList');
+    
+    if (filtered.length === 0) { 
+      el.innerHTML = `<div class="adm-empty"><i class="fas fa-users"></i><p>No customers found.</p></div>`; 
+      return; 
+    }
+
+    el.innerHTML = filtered.map(u => {
+      const initials = (u.fullName || '?').split(' ').map(s => s[0]).slice(0, 2).join('').toUpperCase();
+      const isBlocked = u.status === 'Blocked';
+      const statusBadge = isBlocked ? `<span class="badge blocked"><i class="fas fa-ban"></i> Blocked</span>` : `<span class="badge active"><i class="fas fa-check-circle"></i> Active</span>`;
+
+      return `
+        <div class="adm-card">
+          <div class="adm-user-head">
+            <div class="adm-avatar">${initials}</div>
+            <div class="adm-user-info">
+              <div class="adm-user-name">${u.fullName || "Unknown User"} ${statusBadge}</div>
+              <div class="adm-user-email">${u.email}</div>
+            </div>
+          </div>
+          <div class="adm-user-meta">
+            <div class="adm-user-meta-item">
+              <div class="adm-user-meta-label">Account Number</div>
+              <div class="adm-user-meta-val">${u.accountNumber || "•••• 0000"}</div>
+            </div>
+            <div class="adm-user-meta-item">
+              <div class="adm-user-meta-label">Balance</div>
+              <div class="adm-user-meta-val">$${Number(u.balance || 0).toFixed(2)}</div>
+            </div>
+          </div>
+          <div class="adm-actions">
+            <button class="adm-btn manage" onclick="openManagementView('${u.id}')"><i class="fas fa-user-cog"></i> Manage Account</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // ==========================================
+  // RENDER GLOBAL TRANSACTIONS (LEDGER)
+  // ==========================================
+  function renderGlobalTransactions(transactions) {
+    const el = $('globalTransactionsList');
+    if (transactions.length === 0) {
+      el.innerHTML = `<div class="adm-empty"><i class="fas fa-exchange-alt"></i><p>No transactions found.</p></div>`;
+      return;
+    }
+
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    el.innerHTML = transactions.map(t => {
+      const isCredit = t.type === "Credit";
+      const amountClass = isCredit ? "color: #10b981;" : "color: var(--text-main);";
+      const prefix = isCredit ? "+" : "-";
+      
+      return `
+        <div class="adm-card">
+          <div class="adm-user-head">
+            <div class="adm-user-info">
+              <div class="adm-user-name">${t.memo || t.type}</div>
+              <div class="adm-user-email">${t.date}</div>
+            </div>
+            <div style="font-size: 1.1rem; font-weight: 800; font-family: monospace; ${amountClass}">
+              ${prefix}$${Number(t.amount).toFixed(2)}
+            </div>
+          </div>
+          <div class="adm-user-meta" style="margin-bottom: 0; border-bottom: none;">
+            <div class="adm-user-meta-item">
+              <div class="adm-user-meta-label">Sender</div>
+              <div class="adm-user-meta-val" style="font-size: 0.75rem;">${t.senderEmail}</div>
+            </div>
+            <div class="adm-user-meta-item">
+              <div class="adm-user-meta-label">Receiver</div>
+              <div class="adm-user-meta-val" style="font-size: 0.75rem;">${t.recipientEmail}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // ==========================================
+  // RENDER TICKETS
+  // ==========================================
+  function renderTickets() {
+    if (tickets.length === 0) {
+      $('ticketsList').innerHTML = `<div class="adm-empty"><i class="fas fa-headset"></i><p>No support tickets found.</p></div>`;
+      return;
+    }
+
+    const sorted = [...tickets].sort((a, b) => (a.status === "Resolved" ? 1 : -1));
+
+    $('ticketsList').innerHTML = sorted.map(t => {
+      const isResolved = t.status === "Resolved";
+      const badge = isResolved ? `<span class="badge active">Resolved</span>` : `<span class="badge open">Open</span>`;
+      
+      const replyBox = isResolved ? `
+        <div style="margin-top:12px; padding:12px; background:rgba(46,160,67,0.05); border:1px solid rgba(46,160,67,0.2); border-radius:8px;">
+          <div style="color:#10b981; font-size:10px; font-weight:700; text-transform:uppercase; margin-bottom:4px;">Admin Reply</div>
+          <div style="color:var(--text-main); font-size:13px;">${t.adminReply}</div>
+        </div>
+      ` : `
+        <div class="reply-box">
+          <input type="text" id="reply_${t.id}" class="reply-input" placeholder="Type reply...">
+          <button class="adm-btn" style="flex:none; background:var(--gold); color:#000; font-weight:700;" onclick="resolveTicket('${t.id}')">Reply</button>
+        </div>
+      `;
+
+      return `
+        <div class="adm-card">
+          <div class="adm-user-head">
+            <div class="adm-user-info">
+              <div class="adm-user-name">${t.name} <span style="font-size:11px; color:var(--text-muted); font-weight:400;">(${t.email})</span></div>
+              <div class="adm-user-email">${t.date} • ${t.category}</div>
+            </div>
+            ${badge}
+          </div>
+          <div style="font-size:13px; color:var(--text-muted); padding:12px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px solid var(--border); border-left:3px solid var(--border);">"${t.message}"</div>
+          ${replyBox}
+        </div>
+      `;
+    }).join("");
+  }
+
+  // ==========================================
+  // FULL PAGE MANAGEMENT LOGIC
+  // ==========================================
+  
+  window.openManagementView = function(userId) {
+    const user = users.find(u => u.id === userId);
+    if(!user) return;
+
+    currentManagedUser = user;
+    updateManageViewUI();
+    $('managementView').classList.add('show');
+  }
+
+  window.closeManagementView = function() {
+    $('managementView').classList.remove('show');
+    currentManagedUser = null;
+  }
+
+  function updateManageViewUI() {
+    if (!currentManagedUser) return;
+    const user = currentManagedUser;
+
+    $('manageAvatar').textContent = (user.fullName || '?').charAt(0).toUpperCase();
+    $('manageName').textContent = user.fullName || 'Unknown';
+    $('manageEmail').textContent = user.email;
+    $('manageAccountNum').textContent = user.accountNumber || '•••• 0000';
+    $('manageBalance').textContent = '$' + Number(user.balance || 0).toFixed(2);
+    $('manageDateJoined').textContent = user.dateJoined || 'Oct 2026';
+    $('manageID').textContent = user.id;
+
+    const isBlocked = user.status === 'Blocked';
+    const badge = $('manageStatusBadge');
+    badge.textContent = isBlocked ? 'Blocked' : 'Active';
+    badge.className = isBlocked ? 'badge blocked' : 'badge active';
+
+    const blockBtn = $('blockBtn');
+    if (isBlocked) {
+      blockBtn.innerHTML = '<i class="fas fa-unlock"></i> Unblock Account';
+      blockBtn.style.background = 'rgba(46,160,67,0.1)';
+      blockBtn.style.color = '#10b981';
+      blockBtn.style.borderColor = '#10b981';
+    } else {
+      blockBtn.innerHTML = '<i class="fas fa-ban"></i> Block Account';
+      blockBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+      blockBtn.style.color = '#ef4444';
+      blockBtn.style.borderColor = '#ef4444';
+    }
+  }
+
+  window.executeTransaction = async function() {
+    if (!currentManagedUser) return alert("No user selected.");
+    
+    const action = $('processAction').value;
+    const amount = parseFloat($('processAmount').value);
+    
+    if (isNaN(amount) || amount <= 0) return alert("Enter a valid amount.");
+    
+    const btn = $('processBtn');
+    btn.textContent = "Processing..."; btn.disabled = true;
+
+    try {
+      const userRef = db.collection("users").doc(currentManagedUser.id);
+      const finalAmount = action === "Credit" ? amount : -amount;
+      
+      await userRef.update({ 
+        balance: firebase.firestore.FieldValue.increment(finalAmount) 
+      });
+
+      await db.collection("transactions").add({
+        senderEmail: "admin@express.com",
+        recipientEmail: currentManagedUser.email,
+        amount: amount,
+        memo: action === "Credit" ? "Bank Deposit" : "Bank Withdrawal",
+        type: action === "Credit" ? "Credit" : "Debit",
+        date: new Date().toLocaleString(),
+        status: "Completed"
+      });
+      
+      $('processAmount').value = '';
+      alert(`Successfully ${action.toLowerCase()}ed $${amount.toFixed(2)}.`);
+      
+    } catch (err) {
+      alert("Error updating balance: " + err.message);
+    } finally {
+      btn.textContent = "Process Transaction"; btn.disabled = false;
+    }
+  }
+
+  window.executeBlockToggle = async function() {
+    if (!currentManagedUser) return alert("No user selected.");
+    
+    const newStatus = currentManagedUser.status === "Blocked" ? "Active" : "Blocked";
+    if(!confirm(`Are you sure you want to ${newStatus.toLowerCase()} this account?`)) return;
+    
+    const btn = $('blockBtn');
+    btn.textContent = "Updating..."; btn.disabled = true;
+
+    try {
+      await db.collection("users").doc(currentManagedUser.id).update({ status: newStatus });
+      alert(`Account status changed to ${newStatus}.`);
+    } catch (err) {
+      alert("Error updating status: " + err.message);
+    } finally {
+      btn.textContent = newStatus === "Active" ? "Unblock Account" : "Block Account";
+      btn.disabled = false;
+    }
+  }
+
+  // ==========================================
+  // GENERAL UI LOGIC
+  // ==========================================
+  window.openTab = function(evt, tabId) {
+    document.querySelectorAll('.adm-panel').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.adm-tab').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    evt.currentTarget.classList.add('active');
+  }
+
+  $('userSearch').addEventListener("input", renderUsers);
+
+  window.resolveTicket = async function(ticketId) {
+    const reply = document.getElementById(`reply_${ticketId}`).value;
+    if (!reply) return alert("Type a reply first.");
+    try {
+      await db.collection("support_tickets").doc(ticketId).update({
+        status: "Resolved",
+        adminReply: reply
+      });
+    } catch (err) { alert(err.message); }
+  }
+</script>
+</body>
+</html>

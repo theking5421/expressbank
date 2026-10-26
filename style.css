@@ -1,0 +1,200 @@
+/* --- BASE STYLES --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Dark background matching the landing page */
+  background-color: #0a0f1d; 
+  background-image: radial-gradient(circle at top right, rgba(59, 130, 246, 0.15), transparent 40%),
+                    radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.1), transparent 40%);
+  padding: 20px;
+  position: relative;
+}
+
+/* Back to home logo */
+.top-logo {
+  position: absolute;
+  top: 30px;
+  left: 40px;
+  font-size: 20px;
+  font-weight: 800;
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.3s;
+}
+
+.top-logo:hover {
+  opacity: 0.8;
+}
+
+/* --- GLASS LOGIN CARD --- */
+.login-card {
+  /* Glassmorphism effect */
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  padding: 40px 32px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 10;
+}
+
+.login-card h1 {
+  font-size: 28px;
+  color: #ffffff;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+/* Form Elements */
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: #cbd5e1;
+  margin-bottom: 8px;
+  margin-top: 20px;
+}
+
+input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  font-size: 15px;
+  color: white;
+  transition: all 0.2s;
+}
+
+input::placeholder {
+  color: #64748b;
+}
+
+input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: rgba(15, 23, 42, 0.8);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Buttons and Links */
+button {
+  width: 100%;
+  margin-top: 32px;
+  padding: 16px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+button:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.form-extras {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  font-size: 13px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+}
+
+.remember-me input {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+a.forgot-link {
+  color: #60a5fa;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a.forgot-link:hover {
+  text-decoration: underline;
+}
+
+.switch-text {
+  text-align: center;
+  margin-top: 32px;
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.switch-text a {
+  color: #60a5fa;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.switch-text a:hover {
+  text-decoration: underline;
+}
+
+.error {
+  text-align: center;
+  color: #f87171;
+  font-size: 14px;
+  margin-top: 16px;
+  min-height: 20px;
+  font-weight: 500;
+  background: rgba(248, 113, 113, 0.1);
+  padding: 10px;
+  border-radius: 8px;
+  display: none;
+}
+
+.error:not(:empty) {
+  display: block; /* Only shows the red box if there is an error */
+}
+
+/* Mobile adjustments for the top logo */
+@media (max-width: 600px) {
+  .top-logo {
+    top: 20px;
+    left: 20px;
+  }
+}
